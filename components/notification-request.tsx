@@ -1,6 +1,8 @@
-import { generateToken, messaging } from '@/lib/firebase';
+"use client"
+
+import { generateToken, getFirebaseMessaging } from '@/lib/firebase';
 import { onMessage } from 'firebase/messaging';
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 
 function NotificationRequest({ setToken }: { setToken: (token: string) => void }) {
 
@@ -8,14 +10,17 @@ function NotificationRequest({ setToken }: { setToken: (token: string) => void }
         generateToken().then((token) => {
             setToken(token || "");
         });
-        onMessage(messaging, (payload) => {
-            console.log(payload)
-        })
-    }, []);
+        
+        const messaging = getFirebaseMessaging();
+        if (messaging) {
+            const unsubscribe = onMessage(messaging, (payload) => {
+                console.log(payload);
+            });
+            return () => unsubscribe();
+        }
+    }, [setToken]);
 
-    return (
-        <></>
-    )
+    return null;
 }
 
 export default NotificationRequest
