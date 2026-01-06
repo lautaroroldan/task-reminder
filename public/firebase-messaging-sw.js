@@ -18,12 +18,50 @@ messaging.onBackgroundMessage((payload) => {
         '[firebase-messaging-sw.js] Received background message ',
         payload
     );
-    // Customize notification here
-    const notificationTitle = payload.notification.title;
+    
+    // Extraer datos del payload
+    const notificationTitle = payload.data.title;
+    const notificationBody = payload.data.body;
+    const taskId = payload.data.taskId;
+    
     const notificationOptions = {
-        body: payload.notification.body,
-        icon: payload.notification.icon
+        body: notificationBody,
+        icon: '/next.svg',
+        badge: '/next.svg',
+        tag: `task-${taskId}`, // Tag único: evita notificaciones duplicadas para la misma tarea
+        requireInteraction: false,
+        // TODO: Descomentar cuando implementes los endpoints de acciones
+        // actions: [
+        //     { action: 'view', title: 'Ver tarea', icon: '/next.svg' },
+        //     { action: 'complete', title: 'Completar', icon: '/next.svg' },
+        //     { action: 'dismiss', title: 'Cerrar', icon: '/next.svg' }
+        // ]
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+// TODO: Event listener para manejar clicks en las acciones
+// self.addEventListener('notificationclick', (event) => {
+//     event.notification.close();
+//     
+//     const action = event.action;
+//     const taskId = event.notification.tag.replace('task-', '');
+//     
+//     if (action === 'complete') {
+//         // Llamar a endpoint para marcar tarea como completa
+//         event.waitUntil(
+//             fetch('/api/tasks/complete', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ taskId })
+//             })
+//         );
+//     } else if (action === 'view') {
+//         // Abrir la app en la tarea específica
+//         event.waitUntil(
+//             clients.openWindow(`/?taskId=${taskId}`)
+//         );
+//     }
+//     // Si es 'dismiss' o click sin acción, solo cierra la notificación
+// });

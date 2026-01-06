@@ -25,11 +25,15 @@ const getAdminApp = () => {
 
 export const sendNotification = async (
     token: string,
-    payload: { title: string; body: string }
+    payload: { title: string; body: string; taskId: string }
 ) => {
     const app = getAdminApp();
     await app.messaging().send({
         token,
-        notification: payload,
+        data: {
+            title: payload.title,
+            body: payload.body,
+            taskId: payload.taskId,
+        },
     });
 };

@@ -18,7 +18,7 @@ export async function GET() {
                 const diffInDays = Math.ceil(
                     (new Date(task.endDate).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
                 );
-
+                
                 let body = '';
                 if (diffInDays === 0) {
                     body = `"${task.title}" vence hoy`;
@@ -29,18 +29,19 @@ export async function GET() {
                 } else {
                     body = `"${task.title}" vence en ${diffInDays} días`;
                 }
-
+                
                 await sendNotification(task.token, {
                     title: 'Recordatorio de tarea',
                     body,
+                    taskId: task.id,
                 });
-
+                
                 notifications.push({
                     title: task.title,
                     frequency: task.frequency,
                     daysUntilDue: diffInDays
                 });
-
+                
                 sentCount++;
             }
         }
