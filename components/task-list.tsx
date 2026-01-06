@@ -4,7 +4,7 @@ import type { Task } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Trash2, Bell, BellOff, RefreshCw, Calendar } from "lucide-react"
-import { isTaskActiveToday, isTaskCompletedThisMonth } from "@/lib/task-utils"
+import { isTaskCompletedThisMonth } from "@/lib/task-utils"
 
 interface TaskListProps {
   tasks: Task[]
@@ -26,7 +26,7 @@ export default function TaskList({ tasks, onCompleteTask, onDeleteTask }: TaskLi
   return (
     <div className="space-y-4">
       {tasks.map((task) => {
-        const isActive = isTaskActiveToday(task)
+        //const isActive = isTaskActiveToday(task)
         const isCompleted = isTaskCompletedThisMonth(task)
 
         return (
