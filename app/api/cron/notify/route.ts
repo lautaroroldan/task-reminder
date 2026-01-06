@@ -1,5 +1,5 @@
 import { getTasksForNotification } from '@/db/queries/select';
-import { sendNotification } from '@/lib/firebase-admin';
+import { sendGroupedNotification } from '@/lib/firebase-admin';
 import { filterTasksForNotification } from '@/lib/notification-utils';
 import { NextResponse } from 'next/server';
 
@@ -10,46 +10,69 @@ export async function GET() {
         // Filtrar tareas según su frecuencia de notificación
         const tasksToNotify = filterTasksForNotification(allTasks);
 
+        if (tasksToNotify.length === 0) {
+            return NextResponse.json({
+                success: true,
+                found: allTasks.length,
+                sent: 0,
+                notifications: []
+            });
+        }
+
+        // Agrupar tareas por token (para soportar múltiples usuarios en el futuro)
+        const tasksByToken = new Map<string, typeof tasksToNotify>();
+        
+        for (const task of tasksToNotify) {
+            if (task.token) {
+                if (!tasksByToken.has(task.token)) {
+                    tasksByToken.set(task.token, []);
+                }
+                tasksByToken.get(task.token)!.push(task);
+            }
+        }
+
         let sentCount = 0;
         const notifications = [];
 
-        for (const task of tasksToNotify) {
-            if (task.token) {
+        // Enviar una notificación agrupada por cada token (usuario)
+        for (const [token, tasks] of tasksByToken.entries()) {
+            const tasksData = tasks.map(task => {
                 const diffInDays = Math.ceil(
                     (new Date(task.endDate).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
                 );
                 
-                let body = '';
-                if (diffInDays === 0) {
-                    body = `"${task.title}" vence hoy`;
-                } else if (diffInDays === 1) {
-                    body = `"${task.title}" vence mañana`;
-                } else if (diffInDays === 7) {
-                    body = `"${task.title}" vence en una semana`;
-                } else {
-                    body = `"${task.title}" vence en ${diffInDays} días`;
-                }
-                
-                await sendNotification(task.token, {
-                    title: 'Recordatorio de tarea',
-                    body,
-                    taskId: task.id,
-                });
-                
-                notifications.push({
+                return {
+                    id: task.id,
                     title: task.title,
-                    frequency: task.frequency,
                     daysUntilDue: diffInDays
-                });
-                
-                sentCount++;
-            }
+                };
+            });
+
+            // Ordenar por urgencia (menos días primero)
+            tasksData.sort((a, b) => a.daysUntilDue - b.daysUntilDue);
+
+            await sendGroupedNotification(token, {
+                count: tasks.length,
+                tasks: tasksData
+            });
+
+            notifications.push({
+                token: token.substring(0, 10) + '...',
+                taskCount: tasks.length,
+                tasks: tasksData.map(t => ({
+                    title: t.title,
+                    daysUntilDue: t.daysUntilDue
+                }))
+            });
+
+            sentCount++;
         }
 
         return NextResponse.json({
             success: true,
             found: allTasks.length,
             sent: sentCount,
+            totalTasks: tasksToNotify.length,
             notifications
         });
     } catch (error) {

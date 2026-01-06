@@ -37,3 +37,45 @@ export const sendNotification = async (
         },
     });
 };
+
+export const sendGroupedNotification = async (
+    token: string,
+    payload: {
+        count: number;
+        tasks: Array<{
+            id: string;
+            title: string;
+            daysUntilDue: number;
+        }>;
+    }
+) => {
+    const app = getAdminApp();
+    
+    // Crear el cuerpo de la notificación con la lista de tareas
+    const taskList = payload.tasks
+        .map(task => {
+            let timeText = '';
+            if (task.daysUntilDue === 0) {
+                timeText = 'vence hoy';
+            } else if (task.daysUntilDue === 1) {
+                timeText = 'vence mañana';
+            } else if (task.daysUntilDue === 7) {
+                timeText = 'vence en 1 semana';
+            } else {
+                timeText = `vence en ${task.daysUntilDue} días`;
+            }
+            return `• ${task.title} (${timeText})`;
+        })
+        .join('\n');
+    
+    await app.messaging().send({
+        token,
+        data: {
+            title: `📋 ${payload.count} tarea${payload.count > 1 ? 's' : ''} pendiente${payload.count > 1 ? 's' : ''}`,
+            body: taskList,
+            count: payload.count.toString(),
+            taskIds: JSON.stringify(payload.tasks.map(t => t.id)),
+            type: 'grouped',
+        },
+    });
+};

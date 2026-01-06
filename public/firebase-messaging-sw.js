@@ -22,46 +22,87 @@ messaging.onBackgroundMessage((payload) => {
     // Extraer datos del payload
     const notificationTitle = payload.data.title;
     const notificationBody = payload.data.body;
-    const taskId = payload.data.taskId;
+    const type = payload.data.type;
     
+    // Configuración base de la notificación
     const notificationOptions = {
         body: notificationBody,
         icon: '/next.svg',
         badge: '/next.svg',
-        tag: `task-${taskId}`, // Tag único: evita notificaciones duplicadas para la misma tarea
         requireInteraction: false,
-        // TODO: Descomentar cuando implementes los endpoints de acciones
-        // actions: [
-        //     { action: 'view', title: 'Ver tarea', icon: '/next.svg' },
-        //     { action: 'complete', title: 'Completar', icon: '/next.svg' },
-        //     { action: 'dismiss', title: 'Cerrar', icon: '/next.svg' }
-        // ]
+        vibrate: [200, 100, 200],
     };
+
+    // Si es una notificación agrupada
+    if (type === 'grouped') {
+        const count = parseInt(payload.data.count, 10);
+        const taskIds = JSON.parse(payload.data.taskIds);
+        const today = new Date().toISOString().split('T')[0];
+        
+        notificationOptions.tag = `daily-summary-${today}`;
+        notificationOptions.badge = count.toString();
+        notificationOptions.renotify = true;
+        
+        // Agregar acciones para notificaciones agrupadas
+        notificationOptions.actions = [
+            { action: 'view-all', title: '👁️ Ver todas' },
+            { action: 'dismiss', title: '✖️ Cerrar' }
+        ];
+        
+        // Agregar data para el click handler
+        notificationOptions.data = {
+            type: 'grouped',
+            taskIds: taskIds,
+            count: count
+        };
+    } else {
+        // Notificación individual (legacy, por si acaso)
+        const taskId = payload.data.taskId;
+        notificationOptions.tag = `task-${taskId}`;
+        notificationOptions.data = {
+            type: 'single',
+            taskId: taskId
+        };
+    }
 
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// TODO: Event listener para manejar clicks en las acciones
-// self.addEventListener('notificationclick', (event) => {
-//     event.notification.close();
-//     
-//     const action = event.action;
-//     const taskId = event.notification.tag.replace('task-', '');
-//     
-//     if (action === 'complete') {
-//         // Llamar a endpoint para marcar tarea como completa
-//         event.waitUntil(
-//             fetch('/api/tasks/complete', {
-//                 method: 'POST',
-//                 headers: { 'Content-Type': 'application/json' },
-//                 body: JSON.stringify({ taskId })
-//             })
-//         );
-//     } else if (action === 'view') {
-//         // Abrir la app en la tarea específica
-//         event.waitUntil(
-//             clients.openWindow(`/?taskId=${taskId}`)
-//         );
-//     }
-//     // Si es 'dismiss' o click sin acción, solo cierra la notificación
-// });
+// Event listener para manejar clicks en las notificaciones
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    
+    const action = event.action;
+    const notificationData = event.notification.data;
+    
+    if (notificationData.type === 'grouped') {
+        // Notificación agrupada
+        if (action === 'view-all' || !action) {
+            // Abrir la app principal
+            event.waitUntil(
+                clients.openWindow('/')
+            );
+        }
+        // Si es 'dismiss', solo cierra la notificación (ya está cerrada arriba)
+    } else if (notificationData.type === 'single') {
+        // Notificación individual (legacy)
+        const taskId = notificationData.taskId;
+        
+        if (action === 'view' || !action) {
+            // Abrir la app
+            event.waitUntil(
+                clients.openWindow('/')
+            );
+        }
+        // TODO: Implementar acción de completar cuando tengas el endpoint
+        // else if (action === 'complete') {
+        //     event.waitUntil(
+        //         fetch('/api/tasks/complete', {
+        //             method: 'POST',
+        //             headers: { 'Content-Type': 'application/json' },
+        //             body: JSON.stringify({ taskId })
+        //         })
+        //     );
+        // }
+    }
+});
