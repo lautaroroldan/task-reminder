@@ -31,3 +31,19 @@ export async function getTasksExpiringTomorrow(): Promise<SelectTask[]> {
         );
 }
 
+export async function getTasksForNotification(): Promise<SelectTask[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return db
+        .select()
+        .from(tasksTable)
+        .where(
+            and(
+                eq(tasksTable.completed, false),
+                eq(tasksTable.notification, true),
+                gte(tasksTable.endDate, today)
+            )
+        );
+}
+
