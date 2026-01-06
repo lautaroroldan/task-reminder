@@ -83,7 +83,10 @@ export default function TaskDashboard({ token }: { token: string }) {
         </div>
       )}
 
-      <TaskForm onAddTask={addTask} token={token} />
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-violet-900">Mis Tareas</h2>
+        <TaskForm onAddTask={addTask} token={token} />
+      </div>
 
       <TaskList tasks={tasks} onCompleteTask={completeTask} onDeleteTask={deleteTask} />
     </div>

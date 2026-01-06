@@ -3,6 +3,12 @@ export interface TaskCompletion {
   year: number
 }
 
+export type NotificationFrequency = 
+  | "daily" 
+  | "alternate" 
+  | "week_before" 
+  | "day_before"
+
 export interface Task {
   id: string
   title: string
@@ -13,4 +19,7 @@ export interface Task {
   isRecurring: boolean
   enableNotifications: boolean
   token: string
+  user?: string
+  frequency: NotificationFrequency
+  color: string
 }

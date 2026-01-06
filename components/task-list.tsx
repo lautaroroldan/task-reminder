@@ -25,8 +25,6 @@ export default function TaskList({ tasks, onCompleteTask, onDeleteTask }: TaskLi
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Mis Tareas</h2>
-
       {tasks.map((task) => {
         const isActive = isTaskActiveToday(task)
         const isCompleted = isTaskCompletedThisMonth(task)
@@ -35,17 +33,24 @@ export default function TaskList({ tasks, onCompleteTask, onDeleteTask }: TaskLi
           <Card
             key={task.id}
             className={`
-              rounded-lg border bg-card border-violet-200 shadow-sm hover:shadow-md transition-shadow duration-200 py-0
-              ${isActive && !isCompleted ? "border-l-4 border-l-amber-500" : ""}
+              rounded-lg border bg-card border-violet-200 shadow-sm hover:shadow-md transition-shadow duration-200 py-0 border-l-4
               ${isCompleted ? "bg-violet-50" : ""}
             `}
+            style={{
+              borderLeftColor: task.color || "#FFC0CB"
+            }}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1">
                   <h3 className={`font-medium ${isCompleted ? "text-gray-500" : "text-gray-900"}`}>{task.title.toUpperCase()}</h3>
+                  {task.user && (
+                    <p className="text-sm text-violet-600 font-medium">
+                      Usuario: {task.user}
+                    </p>
+                  )}
                   <p className="text-sm text-gray-500">
-                    Días: {task.startDay} al {task.endDay} de cada mes
+                    Días: {task.startDay}{task.startDay === task.endDay ? "" : ` al ${task.endDay}`} de cada mes
                   </p>
                   <div className="flex mt-1 space-x-4">
                     <span className="text-xs flex items-center gap-1 text-gray-500">

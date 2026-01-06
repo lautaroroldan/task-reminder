@@ -1,6 +1,7 @@
-import { db } from '../index';
-import { InsertTask, tasksTable } from '../schema';
+import { db } from '../index'
+import type { InsertTask } from '../schema'
+import { tasksTable } from '../schema'
 
-export async function createTask(data: InsertTask) {
-    await db.insert(tasksTable).values(data);
+export async function createTask(data: Omit<InsertTask, 'id' | 'createdAt' | 'updatedAt'>) {
+    await db.insert(tasksTable).values(data)
 }

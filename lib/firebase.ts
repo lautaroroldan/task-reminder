@@ -37,13 +37,13 @@ const getFirebaseMessaging = () => {
 
 const generateToken = async () => {
     if (typeof window === "undefined") return null;
-    
+
     try {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
             const msg = getFirebaseMessaging();
             if (!msg) return null;
-            
+
             const token = await getToken(msg, {
                 vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
             });
