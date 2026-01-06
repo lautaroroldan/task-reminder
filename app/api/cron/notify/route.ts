@@ -1,6 +1,7 @@
 import { getTasksForNotification } from '@/db/queries/select';
 import { sendGroupedNotification } from '@/lib/firebase-admin';
 import { filterTasksForNotification } from '@/lib/notification-utils';
+import { getDaysUntilDate } from '@/lib/date-utils';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -37,9 +38,8 @@ export async function GET() {
         // Enviar una notificación agrupada por cada token (usuario)
         for (const [token, tasks] of tasksByToken.entries()) {
             const tasksData = tasks.map(task => {
-                const diffInDays = Math.ceil(
-                    (new Date(task.endDate).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
-                );
+                // Usar la nueva utilidad que solo compara días (ignora horas)
+                const diffInDays = getDaysUntilDate(task.endDate);
                 
                 return {
                     id: task.id,

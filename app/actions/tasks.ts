@@ -10,10 +10,11 @@ export async function saveTask(task: Task) {
         const currentYear = now.getFullYear()
         const currentMonth = now.getMonth()
 
-        const startDate = new Date(currentYear, currentMonth, task.startDay)
+        // Crear fechas exactamente a medianoche (00:00:00.000)
+        const startDate = new Date(currentYear, currentMonth, task.startDay, 0, 0, 0, 0)
         // Si no se especifica endDay o es 0, usar startDay
         const endDay = task.endDay || task.startDay
-        const endDate = new Date(currentYear, currentMonth, endDay)
+        const endDate = new Date(currentYear, currentMonth, endDay, 0, 0, 0, 0)
 
         await createTask({
             title: task.title,

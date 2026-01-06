@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import { formatDaysUntilText } from './date-utils';
 
 const getAdminApp = () => {
     if (!admin.apps.length) {
@@ -54,16 +55,7 @@ export const sendGroupedNotification = async (
     // Crear el cuerpo de la notificación con la lista de tareas
     const taskList = payload.tasks
         .map(task => {
-            let timeText = '';
-            if (task.daysUntilDue === 0) {
-                timeText = 'vence hoy';
-            } else if (task.daysUntilDue === 1) {
-                timeText = 'vence mañana';
-            } else if (task.daysUntilDue === 7) {
-                timeText = 'vence en 1 semana';
-            } else {
-                timeText = `vence en ${task.daysUntilDue} días`;
-            }
+            const timeText = formatDaysUntilText(task.daysUntilDue);
             return `• ${task.title} (${timeText})`;
         })
         .join('\n');
